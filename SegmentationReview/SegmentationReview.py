@@ -166,6 +166,7 @@ class SegmentationReviewWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         
         img = sitk.ReadImage(file_path)
         sitk.WriteImage(img, file_path_nifti)
+        
     def onAtlasDirectoryChanged(self, directory):
         if self.volume_node:
             slicer.mrmlScene.RemoveNode(self.volume_node)
@@ -243,6 +244,9 @@ class SegmentationReviewWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         segmentation_file_path = self.segmentation_files[self.current_index]
         self.segmentation_node = slicer.util.loadSegmentation(segmentation_file_path)
         self.segmentation_node.GetDisplayNode().SetColor(self.segmentation_color)
+        
+        
+        
         self.set_segmentation_and_mask_for_segmentation_editor()        
         
         print(file_path,segmentation_file_path)
@@ -252,10 +256,21 @@ class SegmentationReviewWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         slicer.app.processEvents()
         self.segmentEditorWidget.setMRMLScene(slicer.mrmlScene)
         segmentEditorNode = slicer.vtkMRMLSegmentEditorNode()
+        
+        #get segmentation node center and jump to it
+        from QRCustomizations import CustomSegmentEditor
+        csl=CustomSegmentEditor.CustomSegmentEditorLogic()
+        segNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLSegmentationNode")
+        segmentNode = segNode.GetSegmentation().GetNthSegment(0)
+        centroid = csl.getSegmentCentroid(segNode, segmentNode)
+        markupsLogic = slicer.modules.markups.logic()
+        markupsLogic.JumpSlicesToLocation(centroid[0],centroid[1],centroid[2], False)
+
+
         slicer.mrmlScene.AddNode(segmentEditorNode)
         self.segmentEditorWidget.setMRMLSegmentEditorNode(segmentEditorNode)
         self.segmentEditorWidget.setSegmentationNode(self.segmentation_node)
-        self.segmentEditorWidget.setMasterVolumeNode(self.volume_node)
+        self.segmentEditorWidget.setSourceVolumeNode(self.volume_node)
 
 
     def cleanup(self):
