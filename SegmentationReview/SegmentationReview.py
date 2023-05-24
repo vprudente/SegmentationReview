@@ -258,6 +258,8 @@ class SegmentationReviewWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         segmentEditorNode = slicer.vtkMRMLSegmentEditorNode()
         
         #get segmentation node center and jump to it
+        # this requires QuantitativeReporting installed
+        # https://qiicr.gitbook.io/quantitativereporting-guide/user-guide/installation-and-upgrade
         from QRCustomizations import CustomSegmentEditor
         csl=CustomSegmentEditor.CustomSegmentEditorLogic()
         segNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLSegmentationNode")
