@@ -9,6 +9,7 @@ from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 import ctk
 import qt
+import SegmentStatistics
 
 try:
     import pandas as pd
@@ -260,14 +261,23 @@ class SegmentationReviewWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         #get segmentation node center and jump to it
         # this requires QuantitativeReporting installed
         # https://qiicr.gitbook.io/quantitativereporting-guide/user-guide/installation-and-upgrade
-        from QRCustomizations import CustomSegmentEditor
-        csl=CustomSegmentEditor.CustomSegmentEditorLogic()
-        segNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLSegmentationNode")
-        segmentNode = segNode.GetSegmentation().GetNthSegment(0)
-        centroid = csl.getSegmentCentroid(segNode, segmentNode)
-        markupsLogic = slicer.modules.markups.logic()
-        markupsLogic.JumpSlicesToLocation(centroid[0],centroid[1],centroid[2], False)
+       
+        segmentationNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLSegmentationNode")
+        #segmentationNode = segNode.GetSegmentation().GetNthSegment(0)
 
+        # Compute centroids
+        segStatLogic = SegmentStatistics.SegmentStatisticsLogic()
+        segStatLogic.getParameterNode().SetParameter("Segmentation", segmentationNode.GetID())
+        segStatLogic.getParameterNode().SetParameter("LabelmapSegmentStatisticsPlugin.centroid_ras.enabled", str(True))
+        segStatLogic.computeStatistics()
+        stats = segStatLogic.getStatistics()
+        pointListNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
+        pointListNode.CreateDefaultDisplayNodes()
+        for segmentId in stats["SegmentIDs"]:
+            centroid_ras = stats[segmentId,"LabelmapSegmentStatisticsPlugin.centroid_ras"]
+            print(segmentId,centroid_ras)
+            markupsLogic = slicer.modules.markups.logic()
+            markupsLogic.JumpSlicesToLocation(centroid_ras[0],centroid_ras[1],centroid_ras[2], False)
 
         slicer.mrmlScene.AddNode(segmentEditorNode)
         self.segmentEditorWidget.setMRMLSegmentEditorNode(segmentEditorNode)
