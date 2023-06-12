@@ -166,6 +166,7 @@ class SegmentationReviewWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         
         img = sitk.ReadImage(file_path)
         sitk.WriteImage(img, file_path_nifti)
+        
     def onAtlasDirectoryChanged(self, directory):
         if self.volume_node:
             slicer.mrmlScene.RemoveNode(self.volume_node)
@@ -186,11 +187,12 @@ class SegmentationReviewWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         for file in os.listdir(directory):
             if ".nii" in file and "_mask" not in file:
                 self.n_files+=1
-                if os.path.exists(directory+"/"+file.split(".")[0]+"_mask.nii.gz"):
-                    self.nifti_files.append(directory+"/"+file)
-                    self.segmentation_files.append(directory+"/"+file.split(".")[0]+"_mask.nii.gz")
-                else:
-                    print("No mask for file: ", file)
+                # todo-add logic for non-masked files check
+                #if os.path.exists(directory+"/"+file.split(".")[0]+"_mask.nii.gz"):
+                self.nifti_files.append(directory+"/"+file)
+                    #self.segmentation_files.append(directory+"/"+file.split(".")[0]+"_mask.nii.gz")
+                #else:
+                #    print("No mask for file: ", file)
         self.ui.status_checked.setText("Checked: "+ str(self.current_index) + " / "+str(self.n_files-1))
          
         # load first file with mask
@@ -240,12 +242,12 @@ class SegmentationReviewWidget(ScriptedLoadableModuleWidget, VTKObservationMixin
         self.volume_node = slicer.util.loadVolume(file_path)
         slicer.app.applicationLogic().PropagateVolumeSelection(0)
 
-        segmentation_file_path = self.segmentation_files[self.current_index]
-        self.segmentation_node = slicer.util.loadSegmentation(segmentation_file_path)
-        self.segmentation_node.GetDisplayNode().SetColor(self.segmentation_color)
-        self.set_segmentation_and_mask_for_segmentation_editor()        
+        #segmentation_file_path = self.segmentation_files[self.current_index]
+        #self.segmentation_node = slicer.util.loadSegmentation(segmentation_file_path)
+        #self.segmentation_node.GetDisplayNode().SetColor(self.segmentation_color)
+        #self.set_segmentation_and_mask_for_segmentation_editor()        
         
-        print(file_path,segmentation_file_path)
+        #print(file_path,segmentation_file_path)
 
 
     def set_segmentation_and_mask_for_segmentation_editor(self):
